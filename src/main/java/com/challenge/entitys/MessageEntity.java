@@ -77,15 +77,22 @@ public class MessageEntity {
 	}
 
 	/**
+	 * Caso o <code>bytes</code> seja atribuido uma vez, ele nunca será gerado<br>
+	 * 
+	 * para gerar utilize <code>MessageEntity.getSizeMessage()</code>
+	 * 
 	 * @return the bytes
 	 */
 	public byte getBytes() {
+		if (bytes == 0) {
+			bytes = MessageEntity.getSizeMessage(this);
+		}
 		return bytes;
 	}
 
 	@Column(name = "bytes")
 	public int getBytesInt() {
-		return bytes;
+		return (int) getBytes();
 	}
 
 	/**
@@ -147,12 +154,6 @@ public class MessageEntity {
 		this.crc = crc;
 	}
 
-	@Override
-	public String toString() {
-		return id + ": " + (int) bytes + " - " + String.format("%x", frame.getValue()) + " - " + getDataString() + " - "
-				+ String.format("%x", crc);
-	}
-
 	/**
 	 * Os campos INIT, CRC e END não devem ser considerados para o cálculo do CRC,
 	 * ficando somente os campos BYTES, FRAME e DATA incluídos no cálculo.
@@ -172,18 +173,24 @@ public class MessageEntity {
 
 	/**
 	 * If data is not null<br>
-	 * else <b>return</b> 0
 	 * 
 	 * @param entity
-	 * @return size
+	 * @return
+	 * @throws IllegalArgumentException
 	 */
-	public static byte getSizeMessage(MessageEntity entity) {
+	public static byte getSizeMessage(MessageEntity entity) throws IllegalArgumentException {
 		if (entity.getData() != null) {
 			// all fields except id field and data array field (2)
 			return (byte) (MessageEntity.class.getDeclaredFields().length + (entity.getData().length - 2));
 		} else {
-			return 0;
+			throw new IllegalArgumentException("data cannot be null");
 		}
+	}
+
+	@Override
+	public String toString() {
+		return id + ": " + (int) bytes + " - " + String.format("%x", frame.getValue()) + " - " + getDataString() + " - "
+				+ String.format("%x", crc);
 	}
 
 }
